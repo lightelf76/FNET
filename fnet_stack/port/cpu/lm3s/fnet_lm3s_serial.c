@@ -30,39 +30,46 @@
 #include "lm3s_regs.h"
 #include "lm3s_bits.h"
 
-#define FNET_LM3S_UART_PORT_NUMBER                (3)
-static UART_Type * fnet_lm3s_get_uart_port_ptr[FNET_LM3S_UART_PORT_NUMBER] =
+static UART_Type * fnet_lm3s_get_uart_port_ptr[] =
 {
     UART0,
     UART1,
     UART2
 };
 
+#define FNET_LM3S_UART_COUNT (sizeof(fnet_lm3s_get_uart_port_ptr) / sizeof(fnet_lm3s_get_uart_port_ptr[0]))
+
 /********************************************************************/
 void fnet_cpu_serial_putchar (fnet_index_t port_number, fnet_char_t character)
 {
-    UART_Type * port_ptr = fnet_lm3s_get_uart_port_ptr[port_number];
+    UART_Type *uart_ptr;
 
-    /* Wait until space is available in the FIFO */
-    while((port_ptr->FR & UART_FR_TXFF) != 0u)
-    {}
-
-    /* Send the character */
-    port_ptr->DR = character;
+    if(port_number < FNET_LM3S_UART_COUNT)
+    {
+        uart_ptr = fnet_lm3s_get_uart_port_ptr[port_number];
+        /* Wait until space is available in the FIFO */
+        while((uart_ptr->FR & UART_FR_TXFF) != 0u)
+        {}
+        /* Send the character */
+        uart_ptr->DR = character;
+    }
 }
 
 /********************************************************************/
 fnet_int32_t fnet_cpu_serial_getchar (fnet_index_t port_number)
 {
-    UART_Type * port_ptr = fnet_lm3s_get_uart_port_ptr[port_number];
+    UART_Type *uart_ptr;
 
-    /* Wait until character has been received */
-    if((port_ptr->FR & UART_FR_RXFE) == 0u)
+    if(port_number < FNET_LM3S_UART_COUNT)
     {
-        /* Return the 8-bit data from the receiver */
-        return (fnet_int32_t)(port_ptr->DR & UART_DR_DATA_M);
+        uart_ptr = fnet_lm3s_get_uart_port_ptr[port_number];
+        /* Check character has been received */
+        if((uart_ptr->FR & UART_FR_RXFE) == 0u)
+        {
+            /* Return the 8-bit data from the receiver */
+            return (fnet_int32_t)(uart_ptr->DR & UART_DR_DATA_M);
+        }
     }
-
     return FNET_ERR;
 }
 
@@ -110,7 +117,6 @@ static inline void fnet_cpu_serial_gpio_init(fnet_index_t port_number)
             /* Switch PG0 and PG1 to alternative functions */
             GPIOG->AFSEL |= (1 << 0) | (1 << 1);
             break;
-
     }
 }
 #endif /* FNET_CFG_CPU_SERIAL_IO_INIT */
@@ -118,7 +124,7 @@ static inline void fnet_cpu_serial_gpio_init(fnet_index_t port_number)
 /********************************************************************/
 fnet_return_t fnet_cpu_serial_init(fnet_index_t port_number, fnet_uint32_t baud_rate)
 {
-    UART_Type *     uart_ptr;
+    UART_Type      *uart_ptr;
     fnet_uint32_t   temp;
     fnet_return_t   result = FNET_ERR;
 

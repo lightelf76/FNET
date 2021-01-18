@@ -28,58 +28,21 @@
 #if FNET_LM3S
 #include "stack/fnet_timer_prv.h"
 
-#include "lm3s_regs.h"
-#include "lm3s_bits.h"
-
 static void fnet_cpu_timer_handler_top(void *cookie);
-
-/* Array of CTIMER base addresses. */
-static TIMER_Type *const fnet_lm3s_ctimer_base_addr[FNET_CFG_CPU_TIMER_NUMBER_MAX+1] = 
-{
-    TIMER0,
-    TIMER1,
-    TIMER2,
-    TIMER3,
-};
-
 
 /************************************************************************
 * DESCRIPTION: Top interrupt handler.
 *************************************************************************/
 static void fnet_cpu_timer_handler_top(void *cookie)
 {
-    TIMER_Type             *base;
+    TIMER_Type *base = FNET_CFG_CPU_TIMER_BASE;
 
-    base = fnet_lm3s_ctimer_base_addr[FNET_CFG_CPU_TIMER_NUMBER];
-
-    /* Get Interrupt status flags and clear it*/
+    /* Clear Interrupt */
     base->ICR = TIMER_ICR_TATOCINT;
 
     /* Update FNET timer tick counter.*/
     _fnet_timer_ticks_inc();
 }
-
-
-
-
-    TIMER3->CFG   = TIMER_CFG_16_BIT;
-    TIMER3->TAMR  = TIMER_TAMR_TAMR_1_SHOT;
-    TIMER3->TAPR  = 9; // делитель на 10
-    TIMER3->TAILR = 10000;
-    TIMER3->TBMR  = TIMER_TBMR_TBMR_1_SHOT;
-    TIMER3->TBPR  = 0; // делитель на 1
-    TIMER3->TBILR = 10000;
-    // очистим флаги прерываний
-    TIMER3->ICR   = TIMER_ICR_TBTOCINT | TIMER_ICR_TATOCINT;
-    __ISB();
-    // разрешаем прерывания по переполнению
-    TIMER3->IMR   = TIMER_IMR_TBTOIM | TIMER_IMR_TATOIM;
-    __DSB();
-
-        TIMER3->CTL = TIMER_CTL_TAEN;
-
-         TIMER3->CTL = TIMER_CTL_TBEN | TIMER_CTL_TAEN;
-
 
 /************************************************************************
 * DESCRIPTION: Starts TCP/IP hardware timer. delay_ms - period of timer (ms)
@@ -88,8 +51,19 @@ static void fnet_cpu_timer_handler_top(void *cookie)
 fnet_return_t fnet_cpu_timer_init( fnet_time_t period_ms )
 {
     fnet_return_t result;
-    fnet_uint32_t timeout;
+    fnet_uint32_t prescaler, reload;
+    TIMER_Type *base = FNET_CFG_CPU_TIMER_BASE;;
 
+    /* Check if timer clocking already enabled
+    */
+    if (SYSCTL->RCGC1 & FNET_CFG_CPU_TIMER_CLK_MASK)
+    {
+        /* make sure timer stopped */
+        base->CTL = 0ul;
+        /* disable and clear it's interrupts */
+        base->IMR = 0ul;
+        base->ICR = TIMER_ICR_RTCCINT | TIMER_ICR_CAECINT | TIMER_ICR_CAMCINT | TIMER_ICR_TATOCINT;
+    }
     /* Install interrupt handler and enable interrupt in NVIC.
     */
     result = _fnet_isr_vector_init(FNET_CFG_CPU_TIMER_VECTOR_NUMBER, fnet_cpu_timer_handler_top,
@@ -97,28 +71,29 @@ fnet_return_t fnet_cpu_timer_init( fnet_time_t period_ms )
                                    FNET_CFG_CPU_TIMER_VECTOR_PRIORITY, 0u);
     if(result == FNET_OK)
     {
-        /* Initialize the PIT timer to generate an interrupt every period_ms */
-#if FNET_CFG_CPU_TIMER_NUMBER == 0
-        SYSCTL->RCGC1 |= SYSCTL_RCGC1_TIMER0; 
-#elif FNET_CFG_CPU_TIMER_NUMBER == 1
-#elif FNET_CFG_CPU_TIMER_NUMBER == 2
-#elif FNET_CFG_CPU_TIMER_NUMBER == 3
-
-#endif /* FNET_CFG_CPU_TIMER_NUMBER */
-        /* Enable the clock to the PIT module. Clock for PIT Timers to be enabled */
-        FNET_MK_SIM_SCGC6 |= FNET_MK_SIM_SCGC6_PIT_MASK;
-
-        /* Enable the PIT timer module. */
-        FNET_MK_PIT_MCR &= ~FNET_MK_PIT_MCR_MDIS_MASK;
-
+        /* Initialize the GPTM timer to generate an interrupt every period_ms */
+        /* Enable the clock to the GPTM module. Clock for GPTM Timer to be enabled */
+        SYSCTL->RCGC1 |= FNET_CFG_CPU_TIMER_CLK_MASK;
         /* Calculate the timeout value. */
-        timeout = period_ms * FNET_MK_PERIPH_CLOCK_KHZ;
-        FNET_MK_PIT_LDVAL(FNET_CFG_CPU_TIMER_NUMBER) = timeout;
-
-        /* Enable the timer and enable interrupts */
-        FNET_MK_PIT_TCTRL(FNET_CFG_CPU_TIMER_NUMBER) |= FNET_MK_PIT_TCTRL_TEN_MASK | FNET_MK_PIT_TCTRL_TIE_MASK;
+        reload = period_ms * FNET_MK_PERIPH_CLOCK_KHZ;
+        /* Set 16-bit configuration (as 32-bit mode not usable by chip errata) */
+        base->CFG = TIMER_CFG_16_BIT;
+        /* Select periodic interrupt mode */
+        base->TAMR = TIMER_TAMR_TAMR_PERIOD;
+        /* calculate prescaler value */
+        prescaler = 1;
+        while ((reload / prescaler) > 0xFFFFul) prescaler++;
+        /* Set prescaler (one off) */
+        base->TAPR = prescaler - 1;
+        /* Set counter reload */
+        base->TAILR = (reload / prescaler) - 1;
+        /* Clear interrupt */
+        base->ICR = TIMER_ICR_TATOCINT;
+        /* Enable interrupt */
+        base->IMR = TIMER_IMR_TATOIM;
+        /* Start counting */
+        base->CTL = TIMER_CTL_TAEN;
     }
-
     return result;
 }
 
@@ -129,11 +104,13 @@ fnet_return_t fnet_cpu_timer_init( fnet_time_t period_ms )
 *************************************************************************/
 void fnet_cpu_timer_release( void )
 {
-    TIMER_Type             *base;
-
-    base = fnet_LM3S_ctimer_base_addr[FNET_CFG_CPU_TIMER_NUMBER];
-
-    TIMER_Deinit(base);
+    TIMER_Type *base = FNET_CFG_CPU_TIMER_BASE;;
+    /* Disable interrupt */
+    base->IMR = 0ul;
+    /* Stop timer */
+    base->CTL = 0ul;
+    /* Uninstall interrupt handler */
+    fnet_isr_unregister(FNET_CFG_CPU_TIMER_VECTOR_NUMBER);
 }
 
 /* If vector table is in ROM, pre-install FNET ISR for the Timer Event interrupt*/

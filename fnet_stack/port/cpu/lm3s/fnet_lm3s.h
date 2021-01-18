@@ -61,7 +61,8 @@ fnet_uint32_t fnet_lm3s_periph_clk_khz(void);
 #define FNET_LM3S_PERIPH_CLOCK_KHZ     fnet_lm3s_periph_clk_khz()
 #define FNET_LM3S_PERIPH_CLOCK_MHZ     (fnet_lm3s_periph_clk_khz()/1000)
 
-
+#include "lm3s_regs.h"
+#include "lm3s_bits.h"
 
 #if defined(__cplusplus)
 extern "C" {
