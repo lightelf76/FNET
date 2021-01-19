@@ -97,7 +97,7 @@
     #define FNET_CFG_CPU_MK66FN2    (0)
 #endif
 #ifndef FNET_CFG_CPU_MK70FN1
-    #define FNET_CFG_CPU_MK70FN1   	(0)
+    #define FNET_CFG_CPU_MK70FN1    (0)
 #endif
 #ifndef FNET_CFG_CPU_MK60FN1
     #define FNET_CFG_CPU_MK60FN1    (0)
@@ -118,13 +118,19 @@
     #define FNET_CFG_CPU_S32R274    (0)
 #endif
 #ifndef FNET_CFG_CPU_LPC54628
-    #define FNET_CFG_CPU_LPC54628  	(0)
+    #define FNET_CFG_CPU_LPC54628   (0)
 #endif
 #ifndef FNET_CFG_CPU_MIMXRT1052
     #define FNET_CFG_CPU_MIMXRT1052 (0)
 #endif
 #ifndef FNET_CFG_CPU_MIMXRT1062
     #define FNET_CFG_CPU_MIMXRT1062 (0)
+#endif
+#ifndef FNET_CFG_CPU_LM3S6965
+    #define FNET_CFG_CPU_LM3S6965   (0)
+#endif
+#ifndef FNET_CFG_CPU_LM3S8962
+    #define FNET_CFG_CPU_LM3S8962   (0)
 #endif
 
 /*********** MFC ********************/
@@ -318,6 +324,22 @@
     #define FNET_CPU_STR    "MIMXRT1062"
 #endif
 
+#if FNET_CFG_CPU_LM3S8962
+    #ifdef FNET_CPU_STR
+        #error "More than one CPU selected FNET_CFG_CPU_XXXX"
+    #endif
+    #include "port/cpu/lm3s/fnet_lm3s8962_config.h"
+    #define FNET_CPU_STR    "LM3S8962"
+#endif
+
+#if FNET_CFG_CPU_LM3S6965
+    #ifdef FNET_CPU_STR
+        #error "More than one CPU selected FNET_CFG_CPU_XXXX"
+    #endif
+    #include "port/cpu/lm3s/fnet_lm3s6965_config.h"
+    #define FNET_CPU_STR    "LM3S6965"
+#endif
+
 
 /*-----------*/
 #ifndef FNET_CPU_STR
@@ -345,6 +367,10 @@
     #define FNET_MIMXRT (0)
 #endif
 
+#ifndef FNET_LM3S
+    #define FNET_LM3S   (0)
+#endif 
+
 /*-----------*/
 #if FNET_MCF
     #include "port/cpu/mcf/fnet_mcf_config.h"
@@ -364,6 +390,10 @@
 
 #if FNET_MIMXRT
     #include "port/cpu/mimxrt/fnet_mimxrt_config.h"
+#endif
+
+#if FNET_LM3S
+    #include "port/cpu/lm3s/fnet_lm3s_config.h"
 #endif
 
 /**************************************************************************/ /*!

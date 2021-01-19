@@ -35,7 +35,8 @@ fnet_return_t fnet_cpu_isr_install(fnet_uint32_t vector_number, fnet_uint32_t pr
     fnet_uint32_t   divider;
     fnet_uint32_t   irq_number; /* The irq number NOT the vector number.*/
 
-    if(vector_number > 16)
+    /* There are up to 48 NVIC interrupts supporet on LM3Sxxxx */
+    if((vector_number > 16) && (vector_number < 64))
     {
         /* Install FNET ISR into the Vector Table in RAM */
 #if FNET_CFG_CPU_VECTOR_TABLE_IS_IN_RAM
@@ -55,18 +56,15 @@ fnet_return_t fnet_cpu_isr_install(fnet_uint32_t vector_number, fnet_uint32_t pr
         {
             priority = FNET_CFG_CPU_VECTOR_PRIORITY_MAX;
         }
-
-        /* Make sure that the IRQ is an allowable number. */
         irq_number = vector_number - 16u;
         divider = irq_number / 32u;
-        if(divider < 3u)
-        {
-            /* Initialize the NVIC to enable the specified IRQ.*/
-            FNET_LM3S_NVIC_ICPR(divider) |= (fnet_uint32_t)(1u << (irq_number % 32u)); /* Clear-pending. */
-            FNET_LM3S_NVIC_ISER(divider) |= (fnet_uint32_t)(1u << (irq_number % 32u)); /* Set-enable.*/
-            /* Set priority.*/
-            FNET_LM3S_NVIC_IP(irq_number) = (fnet_uint8_t)(FNET_CFG_CPU_VECTOR_PRIORITY_MAX - priority) << 4;
-        }
+        /* Initialize the NVIC to enable the specified IRQ.*/
+        /* Clear-pending. */
+        NVIC->ICPR[divider] = (fnet_uint32_t)(1u << (irq_number % 32u)); 
+        /* Set priority.*/
+        NVIC->IP[irq_number] = (fnet_uint8_t)(FNET_CFG_CPU_VECTOR_PRIORITY_MAX - priority) << (8 - __NVIC_PRIO_BITS);
+        /* Set-enable.*/
+        NVIC->ISER[divider] =  (fnet_uint32_t)(1u << (irq_number % 32u)); 
         result = FNET_OK;
     }
     else

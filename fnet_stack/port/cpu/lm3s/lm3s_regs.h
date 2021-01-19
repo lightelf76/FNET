@@ -112,8 +112,6 @@ typedef enum IRQn
 #define __Vendor_SysTickConfig  0   /*!< 1 if different SysTick config used  */
 
 #include "core_cm3.h"          /* Cortex-M3 processor and core periphs  */
-//#include "system_lm3s.h"       /* LM3S Stellaris system init            */
-
 
 /**
  * @brief  Setup the initial configuration of the microcontroller

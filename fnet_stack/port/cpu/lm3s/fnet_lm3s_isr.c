@@ -34,7 +34,7 @@
 void fnet_cpu_isr(void)
 {
     /* ICSR register [VECTACTIVE].*/
-    fnet_uint8_t vector_number = (*(volatile fnet_uint8_t *)(0xE000ED04u));
+    fnet_uint8_t vector_number = SCB->ICSR & 0x1Ful;
 
     /* Call FNET isr handler.*/
     _fnet_isr_handler((fnet_uint32_t)vector_number );

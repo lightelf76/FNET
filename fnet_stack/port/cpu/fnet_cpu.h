@@ -48,6 +48,10 @@
     #include "mimxrt/fnet_mimxrt.h"
 #endif
 
+#if FNET_LM3S
+    #include "lm3s/fnet_lm3s.h"
+#endif
+
 #include "stack/fnet_stdlib.h"
 
 

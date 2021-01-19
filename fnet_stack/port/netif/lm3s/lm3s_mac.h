@@ -26,12 +26,8 @@
 #include "fnet_config.h"
 
 #if FNET_LM3S
-
-/************************************************************************
-*     MII Register Indexes.
-*************************************************************************/
-#define FNET_FEC_MII_REG_PHYSTS      (0x0010U)   /* PHY Status Register */
-
+#include "fnet.h"
+#include "stack/fnet_eth_prv.h"
 
 #define FNET_LM3S_MII_TIMEOUT            (0x10000U)   /* Timeout counter for MII communications.*/
 
