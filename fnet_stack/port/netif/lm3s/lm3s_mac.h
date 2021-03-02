@@ -36,7 +36,7 @@ extern "C" {
 #endif
 void fnet_fec_output(fnet_netif_t *netif, fnet_netbuf_t *nb);
 #if FNET_CFG_MULTICAST
-#error LM3S has no support for FNET_CFG_MULTICAST!
+#error FNET_CFG_MULTICAST is not supported on LM3S!
 #endif /* FNET_CFG_MULTICAST */
 
 /* For debug needs.*/

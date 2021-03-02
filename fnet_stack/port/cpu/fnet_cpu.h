@@ -52,6 +52,10 @@
     #include "lm3s/fnet_lm3s.h"
 #endif
 
+#if FNET_STM32F4
+    #include "stm32/fnet_stm32f4.h"
+#endif
+
 #include "stack/fnet_stdlib.h"
 
 

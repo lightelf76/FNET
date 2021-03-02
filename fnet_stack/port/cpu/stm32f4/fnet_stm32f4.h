@@ -22,11 +22,11 @@
 *
 ***************************************************************************/
 
-#ifndef _FNET_LM3S_H_
+#ifndef _FNET_STM32F4_H_
 
-#define _FNET_LM3S_H_
+#define _FNET_STM32F4_H_
 
-#if FNET_LM3S
+#if FNET_STM32F4
 
 /*********************************************************************
 *
@@ -56,25 +56,24 @@ typedef volatile fnet_uint64_t fnet_vuint64_t;   /* 64 bits */
 /************************************************************************
 * Stellaris peripheral clock in KHZ.
 *************************************************************************/
-fnet_uint32_t fnet_lm3s_periph_clk_khz(void);
+fnet_uint32_t fnet_stm32f4_periph_clk_khz(void);
 
-#define FNET_LM3S_PERIPH_CLOCK_KHZ     fnet_lm3s_periph_clk_khz()
-#define FNET_LM3S_PERIPH_CLOCK_MHZ     (fnet_lm3s_periph_clk_khz()/1000)
+#define FNET_STM32F4_PERIPH_CLOCK_KHZ     fnet_lm3s_periph_clk_khz()
+#define FNET_STM32F4_PERIPH_CLOCK_MHZ     (fnet_lm3s_periph_clk_khz()/1000)
 
-#include "lm3s_regs.h"
-#include "lm3s_bits.h"
+#include "stm32f4xx.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-void fnet_lm3s_irq_enable(fnet_uint32_t irq_desc);
-fnet_uint32_t fnet_lm3s_irq_disable(void);
+void fnet_stm32f4_irq_enable(fnet_uint32_t irq_desc);
+fnet_uint32_t fnet_stm32f4_irq_disable(void);
 
 #if defined(__cplusplus)
 }
 #endif
 
-#endif /* FNET_MK */
+#endif /* FNET_STM32F4 */
 
-#endif /*_FNET_MK_H_*/
+#endif /*_FNET_STM32F4_H_*/

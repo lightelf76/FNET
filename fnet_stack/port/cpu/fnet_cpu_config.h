@@ -132,7 +132,9 @@
 #ifndef FNET_CFG_CPU_LM3S8962
     #define FNET_CFG_CPU_LM3S8962   (0)
 #endif
-
+#ifndef FNET_CFG_CPU_STM32F4XX
+    #define FNET_CFG_CPU_STM32F4XX  (0)
+#endif
 /*********** MFC ********************/
 #if FNET_CFG_CPU_MCF52235 /* Kirin2 */
     #ifdef FNET_CPU_STR
@@ -328,6 +330,7 @@
     #ifdef FNET_CPU_STR
         #error "More than one CPU selected FNET_CFG_CPU_XXXX"
     #endif
+
     #include "port/cpu/lm3s/fnet_lm3s8962_config.h"
     #define FNET_CPU_STR    "LM3S8962"
 #endif
@@ -336,10 +339,19 @@
     #ifdef FNET_CPU_STR
         #error "More than one CPU selected FNET_CFG_CPU_XXXX"
     #endif
+
     #include "port/cpu/lm3s/fnet_lm3s6965_config.h"
     #define FNET_CPU_STR    "LM3S6965"
 #endif
 
+#if FNET_CFG_CPU_STM32F4
+    #ifdef FNET_CPU_STR
+        #error "More than one CPU selected FNET_CFG_CPU_XXXX"
+    #endif
+
+    #include "port/cpu/stm32/fnet_stm32f4_config.h"
+    #define FNET_CPU_STR    "STM32F4XX"
+#endif
 
 /*-----------*/
 #ifndef FNET_CPU_STR
@@ -371,6 +383,10 @@
     #define FNET_LM3S   (0)
 #endif 
 
+#ifndef FNET_STM32F4
+    #define FNET_STM32F4 (0)
+#endif
+
 /*-----------*/
 #if FNET_MCF
     #include "port/cpu/mcf/fnet_mcf_config.h"
@@ -394,6 +410,10 @@
 
 #if FNET_LM3S
     #include "port/cpu/lm3s/fnet_lm3s_config.h"
+#endif
+
+#if FNET_STM32
+    #include "port/cpu/stm32f4/fnet_stm32f4_config.h"
 #endif
 
 /**************************************************************************/ /*!
